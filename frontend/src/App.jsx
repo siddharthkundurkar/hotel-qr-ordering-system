@@ -28,7 +28,7 @@ import ManagerTables from "./pages/manager/tables/ManagerTables";
 import ManagerOrders from "./pages/manager/orders/ManagerOrder";
 import ManagerInventory from "./pages/manager/inventory/ManagerInventory";
 import ManagerSettings from "./pages/manager/settings/ManagerSetting";
-import ManagerMenu from "./pages/manager/menu/Managermenu";
+import ManagerMenu from "./pages/manager/menu/ManagerMenu";
 
 /* ================= STAFF ================= */
 import WaiterDashboard from "./pages/waiter/WaiterDashboard";
