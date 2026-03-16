@@ -72,7 +72,12 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
-
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Hotel QR Ordering API is running 🚀"
+  });
+});
 /* ================= TEST ================= */
 app.get("/test", (req, res) => {
   res.json({ message: "Hotel qr ordering system is working" });
