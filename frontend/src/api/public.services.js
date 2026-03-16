@@ -15,7 +15,7 @@ const getDeviceId = () => {
 /* ================= AXIOS INSTANCE ================= */
 const publicApi = axios.create({
   baseURL: 
-    "http://localhost:5000/api/public",
+    "https://hotel-qr-ordering-system.onrender.com/api/public",
   headers: {
     "Content-Type": "application/json",
   },
