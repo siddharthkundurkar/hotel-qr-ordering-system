@@ -2,7 +2,7 @@ import QRCode from "qrcode";
 import crypto from "crypto";
 import { db } from "../config/db.js";
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const Client_URL = process.env.Client_URL || "http://localhost:5173";
 
 export const createTable = async (req, res, next) => {
   try {
@@ -75,7 +75,7 @@ export const createTable = async (req, res, next) => {
 
     /* ================= GENERATE QR IMAGE ================= */
 
-    const qrUrl = `${FRONTEND_URL}/qr/${publicToken}`;
+    const qrUrl = `${Client_URL}/qr/${publicToken}`;
     const qrCode = await QRCode.toDataURL(qrUrl);
 
     await db.query(
@@ -85,12 +85,7 @@ export const createTable = async (req, res, next) => {
 
     /* ================= DEBUG LOG (REMOVE IN PROD IF NEEDED) ================= */
 
-    console.log("=====================================");
-    console.log("🟢 TABLE CREATED");
-    console.log("Table ID:", tableId);
-    console.log("QR TOKEN:", publicToken);
-    console.log("QR URL:", qrUrl);
-    console.log("=====================================");
+
 
     return res.status(201).json({
       message: "Table created successfully",
