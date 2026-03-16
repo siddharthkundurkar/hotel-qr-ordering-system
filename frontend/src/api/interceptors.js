@@ -4,7 +4,7 @@ import axios from "axios";
    🔌 MAIN API CLIENT
 ================================================= */
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://hotel-qr-ordering-system.onrender.com/api",
   withCredentials: true, // required for refresh cookie
 });
 
@@ -13,7 +13,7 @@ const api = axios.create({
    (prevents interceptor loops)
 ================================================= */
 const refreshClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://hotel-qr-ordering-system.onrender.com/api",
   withCredentials: true,
 });
 
