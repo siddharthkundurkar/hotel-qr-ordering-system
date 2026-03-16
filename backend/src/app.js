@@ -3,7 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import fs from "fs";
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import companyRoutes from "./routes/company.routes.js";
@@ -110,28 +110,31 @@ app.use((req, res, next) => {
 });
 /* ================= STATIC FILES ================= */
 
+
+
+
+/* ================= STATIC FILES ================= */
+
 // uploads folder
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// serve frontend build
-app.use(express.static(path.join(__dirname, "../../frontend/dist")));
-/* ================= REACT ROUTING FIX ================= */
-app.get("*", (req, res, next) => {
+const frontendPath = path.join(__dirname, "../../frontend/dist");
 
-  // allow API routes
-  if (req.originalUrl.startsWith("/api")) {
-    return next();
-  }
+// serve frontend only if it exists (local development)
+if (fs.existsSync(frontendPath)) {
 
-  // allow uploaded files
-  if (req.originalUrl.startsWith("/uploads")) {
-    return next();
-  }
+  app.use(express.static(frontendPath));
 
-  res.sendFile(
-    path.join(__dirname, "../../frontend/dist/index.html")
-  );
-});
+  app.get("*", (req, res, next) => {
+
+    if (req.originalUrl.startsWith("/api")) return next();
+    if (req.originalUrl.startsWith("/uploads")) return next();
+
+    res.sendFile(path.join(frontendPath, "index.html"));
+
+  });
+
+}
 /* ================= ERROR HANDLER ================= */
 app.use(errorHandler);
 
