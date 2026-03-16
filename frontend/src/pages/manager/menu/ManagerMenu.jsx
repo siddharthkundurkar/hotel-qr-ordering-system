@@ -16,7 +16,7 @@ import {
 } from "../../../api/menu.services";
 
 import AddMenuModal from "./AddMenuModal";
-import AddCategoryModal from "./AddcategoryModal";
+import AddCategoryModal from "./AddCategoryModal";
 import EditMenuModal from "./EditMenuModal";
 import CreateComboModal from "./AddCreateComboModal";
 
