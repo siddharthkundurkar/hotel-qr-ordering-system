@@ -1,0 +1,93 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@import "tw-animate-css";
+
+/* Tailwind file scanning */
+@source "../**/*.{js,ts,jsx,tsx}";
+
+/* ---------------- Custom Components ---------------- */
+
+.nav-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-700 transition;
+}
+
+/* ---------------- Animations ---------------- */
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes floatSlow {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes floatFast {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+}
+
+.animate-floatSlow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-floatFast {
+  animation: floatFast 4s ease-in-out infinite;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.35s ease-out;
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cookBar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-cookBar {
+  animation: cookBar 2s linear infinite;
+}
+.input {
+  @apply w-full border border-slate-200 dark:border-slate-700
+  rounded-lg px-3 py-2 mb-3
+  bg-white dark:bg-slate-800
+  focus:outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+.btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg;
+}
+
+.btn-secondary {
+  @apply border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800;
+}
+@keyframes cookBar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-cookBar {
+  animation: cookBar 3s linear infinite;
+}
