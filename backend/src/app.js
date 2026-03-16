@@ -49,12 +49,18 @@ app.use(
   cors({
     origin: (origin, callback) => {
 
-      // allow requests with no origin (Postman, mobile apps)
+      // Allow requests with no origin (Postman, curl, mobile apps)
       if (!origin) {
         return callback(null, true);
       }
 
+      // Allow localhost + production domain
       if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow Vercel preview deployments
+      if (origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
 
@@ -69,7 +75,7 @@ app.use(cookieParser());
 
 /* ================= TEST ================= */
 app.get("/test", (req, res) => {
-  res.json({ message: "App is working" });
+  res.json({ message: "Hotel qr ordering system is working" });
 });
 
 /* ================= API ROUTES ================= */

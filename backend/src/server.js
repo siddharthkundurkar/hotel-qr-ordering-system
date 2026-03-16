@@ -1,4 +1,4 @@
-import http from "http";
+import http from "node:http";   // better for Node ESM
 import { Server } from "socket.io";
 import app from "./app.js";
 import { runSlaJob } from "./jobs/slaJob.js";
@@ -16,15 +16,15 @@ const io = new Server(server, {
     credentials: true,
   },
 
-  /* ⭐ restaurant network stability */
+  /* restaurant network stability */
   pingTimeout: 60000,
   pingInterval: 25000,
 
-  /* ⭐ future scaling */
+  /* scaling support */
   transports: ["websocket", "polling"],
 });
 
-/* ✅ STORE IO ON APP */
+/* STORE IO ON APP */
 app.set("io", io);
 
 /* =====================================
@@ -34,10 +34,7 @@ app.set("io", io);
 io.on("connection", (socket) => {
   console.log("🟢 Socket connected:", socket.id);
 
-  /* =====================================
-     JOIN BRANCH (staff dashboards)
-  ===================================== */
-
+  /* JOIN BRANCH (staff dashboards) */
   socket.on("join:branch", (branchId) => {
     if (!branchId) return;
 
@@ -49,44 +46,30 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* =====================================
-     JOIN ORDER (customer tracking)
-  ===================================== */
-
+  /* JOIN ORDER (customer tracking) */
   socket.on("join:order", (payload) => {
     if (!payload) return;
 
-    let orderId;
-
-    /* support both formats */
-    if (typeof payload === "object") {
-      orderId = payload.orderId;
-    } else {
-      orderId = payload;
-    }
+    const orderId =
+      typeof payload === "object" ? payload.orderId : payload;
 
     if (!orderId) return;
 
     const cleanId = String(orderId).replace("order:", "");
     const room = `order:${cleanId}`;
 
-    /* ⭐ leave previous order rooms (important) */
+    /* leave previous order rooms */
     socket.rooms.forEach((r) => {
       if (r.startsWith("order:") && r !== room) {
         socket.leave(r);
       }
     });
 
-    if (!socket.rooms.has(room)) {
-      socket.join(room);
-      console.log(`📦 ${socket.id} joined ${room}`);
-    }
+    socket.join(room);
+    console.log(`📦 ${socket.id} joined ${room}`);
   });
 
-  /* =====================================
-     DEBUG HELPERS
-  ===================================== */
-
+  /* DEBUG */
   socket.on("ping:test", () => {
     socket.emit("pong:test", { ok: true });
   });
@@ -105,10 +88,7 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 
-  /* =====================================
-     🛡️ TABLE GUARD (GLOBAL)
-  ===================================== */
-
+  /* TABLE GUARD */
   if (!global.__TABLE_GUARD_STARTED__) {
     global.__TABLE_GUARD_STARTED__ = true;
 
@@ -119,10 +99,7 @@ server.listen(PORT, () => {
     console.log("🛡️ Table Guard started (every 3 minutes)");
   }
 
-  /* =====================================
-     ⏱️ SLA BACKGROUND JOB (GLOBAL)
-  ===================================== */
-
+  /* SLA JOB */
   if (!global.__SLA_JOB_STARTED__) {
     global.__SLA_JOB_STARTED__ = true;
 
