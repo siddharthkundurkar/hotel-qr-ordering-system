@@ -202,7 +202,7 @@ export default function CustomerMenu() {
       localStorage.removeItem(CART_KEY);
       setShowCart(false);
 
-      navigate(`/scan/${token}`, { replace: true });
+      navigate(`/qr/${token}`, { replace: true });
     } catch (e) {
       console.error("❌ ORDER ERROR:", e?.response?.data || e.message);
       alert(t.orderFailed);
