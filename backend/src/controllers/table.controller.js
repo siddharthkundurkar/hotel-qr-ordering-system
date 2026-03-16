@@ -2,7 +2,7 @@ import QRCode from "qrcode";
 import crypto from "crypto";
 import { db } from "../config/db.js";
 
-const Client_URL = process.env.Client_URL || "http://localhost:5173";
+const Client_URL = process.env.Client_URL || "https://hotel-qr-ordering-system.vercel.app";
 
 export const createTable = async (req, res, next) => {
   try {
