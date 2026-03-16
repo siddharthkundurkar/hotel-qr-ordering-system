@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Users, Table, Utensils, ClipboardList } from "lucide-react";
 
-import OverviewDashboard from "./OverviewDashboard";
+import OverviewDashboard from "./OverViewDashboard";
 import TableDashboard from "./TableDashboard";
 import OrderDashboard from "./OrderDashboard";
 import StaffDashboard from "./StaffDashboard";
