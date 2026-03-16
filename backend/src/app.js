@@ -41,7 +41,8 @@ const __dirname = path.dirname(__filename);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "http://localhost:5000"
+  "http://localhost:5000",
+  "https://hotel-qr-ordering-system.vercel.app"
 ];
 
 app.use(
@@ -63,8 +64,6 @@ app.use(
     credentials: true,
   })
 );
-/* ================= BODY + COOKIES ================= */
-
 app.use(express.json());
 app.use(cookieParser());
 
