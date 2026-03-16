@@ -24,14 +24,13 @@ const publicApi = axios.create({
 
 /* ================= REQUEST INTERCEPTOR ================= */
 publicApi.interceptors.request.use((config) => {
-  /* ✅ ALWAYS attach device id (CRITICAL) */
   config.headers["x-device-id"] = getDeviceId();
+  config.headers["x-device-info"] = navigator.userAgent;
 
-  /* ✅ attach latest table session safely */
   const sessionKey = Object.keys(localStorage)
     .filter((k) => k.startsWith("tableSession:"))
     .sort()
-    .pop(); // get latest
+    .pop();
 
   if (sessionKey) {
     const token = localStorage.getItem(sessionKey);

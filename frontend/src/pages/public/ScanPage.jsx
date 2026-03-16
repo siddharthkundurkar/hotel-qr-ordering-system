@@ -20,12 +20,12 @@ export default function ScanPage() {
       const res = await publicApi.get("/orders/current");
 
       if (res?.data?.order) {
-        navigate(`/scan/${token}/live-order`, { replace: true });
+        navigate(`/qr/${token}/live-order`, { replace: true });
       } else {
-        navigate(`/scan/${token}/menu`, { replace: true });
+        navigate(`/qr/${token}/live-order`, { replace: true });
       }
     } catch {
-      navigate(`/scan/${token}/menu`, { replace: true });
+      navigate(`/qr/${token}/menu`, { replace: true });
     }
   };
 
@@ -83,13 +83,16 @@ export default function ScanPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
-        {error}
+ if (error) {
+  return (
+    <div className="min-h-screen flex items-center justify-center text-red-600 text-center p-4">
+      <div>
+        <p className="font-semibold">QR Error</p>
+        <p>{error}</p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return null;
 }
