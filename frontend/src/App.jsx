@@ -182,7 +182,7 @@ export default function App() {
 </Route>
 
       {/* ================= CUSTOMER ================= */}
-      <Route path="/scan/:token" element={<CustomerLayout />}>
+      <Route path="/qr/:token" element={<CustomerLayout />}>
         <Route index element={<ScanPage />} />
         <Route path="menu" element={<CustomerMenu />} />
         <Route path="live-order" element={<CustomerLiveOrder />} />
