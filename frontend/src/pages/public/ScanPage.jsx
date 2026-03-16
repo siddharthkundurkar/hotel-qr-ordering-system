@@ -22,7 +22,7 @@ export default function ScanPage() {
       if (res?.data?.order) {
         navigate(`/qr/${token}/live-order`, { replace: true });
       } else {
-        navigate(`/qr/${token}/live-order`, { replace: true });
+        navigate(`/qr/${token}/menu`, { replace: true });
       }
     } catch {
       navigate(`/qr/${token}/menu`, { replace: true });
