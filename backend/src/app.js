@@ -116,25 +116,7 @@ app.use((req, res, next) => {
 /* ================= STATIC FILES ================= */
 
 // uploads folder
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-const frontendPath = path.join(__dirname, "../../frontend/dist");
-
-// serve frontend only if it exists (local development)
-if (fs.existsSync(frontendPath)) {
-
-  app.use(express.static(frontendPath));
-
-  app.get("*", (req, res, next) => {
-
-    if (req.originalUrl.startsWith("/api")) return next();
-    if (req.originalUrl.startsWith("/uploads")) return next();
-
-    res.sendFile(path.join(frontendPath, "index.html"));
-
-  });
-
-}
 /* ================= ERROR HANDLER ================= */
 app.use(errorHandler);
 
