@@ -8,11 +8,11 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
 
   db: {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    name: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    name: process.env.DB_NAME || "restaurant_erp",
+    port: Number(process.env.DB_PORT) || 3306,
   },
 
   cloudinary: {
@@ -20,4 +20,6 @@ export const env = {
     apiKey: process.env.CLOUDINARY_API_KEY,
     apiSecret: process.env.CLOUDINARY_API_SECRET,
   },
+
+  clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
 };
