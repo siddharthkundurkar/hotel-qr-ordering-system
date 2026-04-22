@@ -6,7 +6,7 @@ import { useParams, useOutletContext } from "react-router-dom";
 import {
   LiveCookingIndicator,
   ChefCookingAnimation,
-} from "./LiveCokkingIndicator";
+} from "./LiveCookingIndicator";
 
 const STORAGE_KEY = "customer:lastLiveOrder";
 

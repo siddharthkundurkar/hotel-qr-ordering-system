@@ -9,7 +9,7 @@ const CART_KEY = "customerCart";
 
 export default function CustomerMenu() {
   const navigate = useNavigate();
-  const { token } = useParams();
+ 
   const outlet = useOutletContext();
  const { token } = useParams();
 
