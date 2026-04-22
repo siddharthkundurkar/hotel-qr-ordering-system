@@ -324,10 +324,12 @@ export const refreshAccessToken = async (req, res, next) => {
     /* ============================================
        🍪 SET COOKIE
     ============================================ */
-   res.cookie("refreshToken", newRefreshToken, {
+  const isProd = true; // since deployed
+
+res.cookie("refreshToken", newRefreshToken, {
   httpOnly: true,
-  secure: true,        // ✅ MUST be true for HTTPS
-  sameSite: "none",    // ✅ MUST be none for cross-origin
+  secure: true,          // MUST for HTTPS
+  sameSite: "none",      // MUST for cross-origin
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 });
