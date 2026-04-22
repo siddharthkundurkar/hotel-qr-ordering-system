@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import socket from "../../socket";
 import { getCurrentCustomerOrder } from "../../api/customer.services";
-
+import { useParams, useOutletContext } from "react-router-dom";
 import {
   LiveCookingIndicator,
   ChefCookingAnimation,
@@ -11,11 +11,11 @@ import {
 const STORAGE_KEY = "customer:lastLiveOrder";
 
 export default function CustomerLiveOrder() {
-  const outlet = useOutletContext();
-  const { token } = useParams();
+  const outlet = useOutletContext?.() || {};
+const { token } = useParams();
 
 const sessionToken =
-  outlet?.sessionToken ||
+  outlet.sessionToken ||
   localStorage.getItem(`tableSession:${token}`);
   const setHasActiveOrder = outlet?.setHasActiveOrder;
 

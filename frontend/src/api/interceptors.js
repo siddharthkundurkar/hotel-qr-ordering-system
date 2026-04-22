@@ -113,7 +113,8 @@ api.interceptors.response.use(
         clearAccessToken();
 
         // 🔥 HARD REDIRECT (enterprise behavior)
-        window.location.href = "/login";
+        // let AuthProvider handle logout
+return Promise.reject(refreshError);
 
         return Promise.reject(refreshError);
       } finally {
