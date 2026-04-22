@@ -22,13 +22,14 @@ export const AuthProvider = ({ children }) => {
     try {
       await API.post("/auth/logout");
     } catch (err) {
-      console.log("Logout error:", err);
-    }
+  console.log("Auth restore failed:", err?.response?.data || err.message);
 
+  // only logout if actually unauthorized
+  if (err?.response?.status === 401) {
     clearAccessToken();
     setUserState(null);
-  };
-
+  }
+}
   /* ================= INIT AUTH (RUN ONCE) ================= */
   useEffect(() => {
     let isMounted = true;
