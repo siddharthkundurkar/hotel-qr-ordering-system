@@ -12,7 +12,11 @@ const STORAGE_KEY = "customer:lastLiveOrder";
 
 export default function CustomerLiveOrder() {
   const outlet = useOutletContext();
-  const sessionToken = outlet?.sessionToken;
+  const { token } = useParams();
+
+const sessionToken =
+  outlet?.sessionToken ||
+  localStorage.getItem(`tableSession:${token}`);
   const setHasActiveOrder = outlet?.setHasActiveOrder;
 
   const orderIdRef = useRef(null);

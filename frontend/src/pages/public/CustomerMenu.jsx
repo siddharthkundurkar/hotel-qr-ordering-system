@@ -11,7 +11,11 @@ export default function CustomerMenu() {
   const navigate = useNavigate();
   const { token } = useParams();
   const outlet = useOutletContext();
-  const sessionToken = outlet?.sessionToken;
+ const { token } = useParams();
+
+const sessionToken =
+  outlet?.sessionToken ||
+  localStorage.getItem(`tableSession:${token}`);
 
   const aliveRef = useRef(true);
 
