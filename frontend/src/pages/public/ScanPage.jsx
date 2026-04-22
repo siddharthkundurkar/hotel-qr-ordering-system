@@ -44,11 +44,20 @@ export default function ScanPage() {
         })
       );
 
-      if (res?.data?.order) {
-        navigate(`/qr/${token}/live-order`, { replace: true });
-      } else {
-        navigate(`/qr/${token}/menu`, { replace: true });
-      }
+   const order = res?.data?.order;
+
+const activeStatuses = [
+  "pending",
+  "accepted",
+  "preparing",
+  "ready",
+];
+
+if (order && activeStatuses.includes(order.status)) {
+  navigate(`/qr/${token}/live-order`, { replace: true });
+} else {
+  navigate(`/qr/${token}/menu`, { replace: true });
+}
     } catch (err) {
       console.error(
         "ORDER FETCH ERROR:",
