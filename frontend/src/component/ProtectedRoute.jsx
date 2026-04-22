@@ -13,7 +13,13 @@ export default function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return null;
+  if (loading) {
+  return (
+    <div className="h-screen flex items-center justify-center">
+      Restoring session...
+    </div>
+  );
+}
 
   // 🔐 Not logged in
   if (!user) {
