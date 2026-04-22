@@ -15,16 +15,21 @@ export default function ScanPage() {
     validateOrOpen();
   }, [token]);
 
-  const goToNext = async () => {
+  const goToNext = async (sessionToken) => {
     try {
-      const res = await publicApi.get("/orders/current");
+      const res = await publicApi.get("/orders/current", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      });
 
       if (res?.data?.order) {
         navigate(`/qr/${token}/live-order`, { replace: true });
       } else {
         navigate(`/qr/${token}/menu`, { replace: true });
       }
-    } catch {
+    } catch (err) {
+      console.error("ORDER FETCH ERROR:", err?.response?.data || err.message);
       navigate(`/qr/${token}/menu`, { replace: true });
     }
   };
@@ -33,36 +38,39 @@ export default function ScanPage() {
     try {
       setLoading(true);
 
-      const storedSession = localStorage.getItem(storageKey);
+      let sessionToken = localStorage.getItem(storageKey);
 
       /* ================= RESTORE SESSION ================= */
 
-      if (storedSession) {
+      if (sessionToken) {
         try {
-          await publicApi.get("/menu");
+          await publicApi.get("/menu", {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          });
 
           console.log("🟢 Existing session valid");
 
-          await goToNext();
+          await goToNext(sessionToken);
           return;
         } catch {
           console.log("🟡 Stored session invalid");
-
           localStorage.removeItem(storageKey);
+          sessionToken = null;
         }
       }
 
       /* ================= OPEN NEW SESSION ================= */
 
       const res = await publicApi.get(`/qr/${token}`);
-
-      const sessionToken = res.data.sessionToken;
+      sessionToken = res.data.sessionToken;
 
       localStorage.setItem(storageKey, sessionToken);
 
       console.log("🟢 New session opened");
 
-      await goToNext();
+      await goToNext(sessionToken);
 
     } catch (err) {
       console.error("QR OPEN ERROR:", err?.response?.data || err.message);
@@ -83,16 +91,16 @@ export default function ScanPage() {
     );
   }
 
- if (error) {
-  return (
-    <div className="min-h-screen flex items-center justify-center text-red-600 text-center p-4">
-      <div>
-        <p className="font-semibold">QR Error</p>
-        <p>{error}</p>
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 text-center p-4">
+        <div>
+          <p className="font-semibold">QR Error</p>
+          <p>{error}</p>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return null;
 }
