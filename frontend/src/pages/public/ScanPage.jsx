@@ -15,13 +15,34 @@ export default function ScanPage() {
     validateOrOpen();
   }, [token]);
 
+  /* ================= RETRY HELPER ================= */
+
+  const retryRequest = async (fn, retries = 3, delay = 1000) => {
+    let lastError;
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastError = err;
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+
+    throw lastError;
+  };
+
+  /* ================= DECIDE NEXT ================= */
+
   const goToNext = async (sessionToken) => {
     try {
-      const res = await publicApi.get("/orders/current", {
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-        },
-      });
+      const res = await retryRequest(() =>
+        publicApi.get("/orders/current", {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
+        })
+      );
 
       if (res?.data?.order) {
         navigate(`/qr/${token}/live-order`, { replace: true });
@@ -29,10 +50,17 @@ export default function ScanPage() {
         navigate(`/qr/${token}/menu`, { replace: true });
       }
     } catch (err) {
-      console.error("ORDER FETCH ERROR:", err?.response?.data || err.message);
+      console.error(
+        "ORDER FETCH ERROR:",
+        err?.response?.data || err.message
+      );
+
+      // fallback safely
       navigate(`/qr/${token}/menu`, { replace: true });
     }
   };
+
+  /* ================= MAIN FLOW ================= */
 
   const validateOrOpen = async () => {
     try {
@@ -40,15 +68,17 @@ export default function ScanPage() {
 
       let sessionToken = localStorage.getItem(storageKey);
 
-      /* ================= RESTORE SESSION ================= */
+      /* ===== RESTORE SESSION ===== */
 
       if (sessionToken) {
         try {
-          await publicApi.get("/menu", {
-            headers: {
-              Authorization: `Bearer ${sessionToken}`,
-            },
-          });
+          await retryRequest(() =>
+            publicApi.get("/menu", {
+              headers: {
+                Authorization: `Bearer ${sessionToken}`,
+              },
+            })
+          );
 
           console.log("🟢 Existing session valid");
 
@@ -61,9 +91,12 @@ export default function ScanPage() {
         }
       }
 
-      /* ================= OPEN NEW SESSION ================= */
+      /* ===== OPEN NEW SESSION ===== */
 
-      const res = await publicApi.get(`/qr/${token}`);
+      const res = await retryRequest(() =>
+        publicApi.get(`/qr/${token}`)
+      );
+
       sessionToken = res.data.sessionToken;
 
       localStorage.setItem(storageKey, sessionToken);
@@ -73,15 +106,22 @@ export default function ScanPage() {
       await goToNext(sessionToken);
 
     } catch (err) {
-      console.error("QR OPEN ERROR:", err?.response?.data || err.message);
+      console.error(
+        "QR OPEN ERROR:",
+        err?.response?.data || err.message
+      );
 
       setError(
-        err?.response?.data?.message || "Invalid or expired QR code"
+        err?.response?.data?.message ||
+        err?.message ||
+        "Invalid or expired QR code"
       );
     } finally {
       setLoading(false);
     }
   };
+
+  /* ================= UI ================= */
 
   if (loading) {
     return (
