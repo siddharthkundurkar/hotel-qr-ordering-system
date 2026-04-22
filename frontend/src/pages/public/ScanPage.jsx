@@ -34,40 +34,42 @@ export default function ScanPage() {
 
   /* ================= DECIDE NEXT ================= */
 
-  const goToNext = async (sessionToken) => {
-    try {
-      const res = await retryRequest(() =>
-        publicApi.get("/orders/current", {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        })
-      );
+ const goToNext = async (sessionToken) => {
+  try {
+    const res = await retryRequest(() =>
+      publicApi.get("/orders/current", {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      })
+    );
 
-   const order = res?.data?.order;
+    const order = res?.data?.order;
 
-const activeStatuses = [
-  "pending",
-  "accepted",
-  "preparing",
-  "ready",
-];
+    const activeStatuses = [
+      "pending",
+      "accepted",
+      "preparing",
+      "ready",
+    ];
 
-if (order && activeStatuses.includes(order.status)) {
-  navigate(`/qr/${token}/live-order`, { replace: true });
-} else {
-  navigate(`/qr/${token}/menu`, { replace: true });
-}
-    } catch (err) {
-      console.error(
-        "ORDER FETCH ERROR:",
-        err?.response?.data || err.message
-      );
+    const status = order?.status?.toLowerCase?.(); // ✅ SAFE
 
-      // fallback safely
+    if (order && status && activeStatuses.includes(status)) {
+      navigate(`/qr/${token}/live-order`, { replace: true });
+    } else {
       navigate(`/qr/${token}/menu`, { replace: true });
     }
-  };
+
+  } catch (err) {
+    console.error(
+      "ORDER FETCH ERROR:",
+      err?.response?.data || err.message
+    );
+
+    navigate(`/qr/${token}/menu`, { replace: true });
+  }
+};
 
   /* ================= MAIN FLOW ================= */
 
