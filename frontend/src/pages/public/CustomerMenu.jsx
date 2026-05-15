@@ -120,7 +120,7 @@ const sessionToken =
             .filter((k) => k.startsWith("tableSession:"))
             .forEach((k) => localStorage.removeItem(k));
 
-          navigate(`/scan/${token}`);
+          navigate(`/qr/${token}`);
         }
       } finally {
         if (aliveRef.current) setLoading(false);
@@ -206,7 +206,7 @@ const sessionToken =
       localStorage.removeItem(CART_KEY);
       setShowCart(false);
 
-      navigate(`/scan/${token}`, { replace: true });
+      navigate(`/qr/${token}`, { replace: true });
     } catch (e) {
       console.error("❌ ORDER ERROR:", e?.response?.data || e.message);
       alert(t.orderFailed);

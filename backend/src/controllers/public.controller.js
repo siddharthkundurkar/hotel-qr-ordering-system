@@ -118,24 +118,57 @@ export const openTableByQr = async (req, res) => {
        🆕 CREATE SESSION
     ================================================= */
 
-    if (!session) {
-      sessionToken = crypto.randomUUID();
+   if (!session) {
 
-      const [insertResult] = await conn.query(
-        `
-        INSERT INTO table_sessions
-          (tableId, branchId, companyId, sessionToken, ipAddress, expiresAt, isActive)
-        VALUES (?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 2 HOUR), 1)
-        `,
-        [table.id, table.branchId, table.companyId, sessionToken, ipAddress],
-      );
+  // 🧹 force remove stale active sessions
+  await conn.query(
+    `
+    UPDATE table_sessions
+    SET isActive = 0
+    WHERE tableId = ?
+      AND isActive = 1
+    `,
+    [table.id]
+  );
 
-      sessionId = insertResult.insertId;
-    } else {
-      sessionId = session.id;
-      sessionToken = session.sessionToken;
-      reused = true;
-    }
+  // 🆕 create new session
+  sessionToken = crypto.randomUUID();
+
+  const [insertResult] = await conn.query(
+    `
+    INSERT INTO table_sessions
+      (
+        tableId,
+        branchId,
+        companyId,
+        sessionToken,
+        ipAddress,
+        expiresAt,
+        isActive
+      )
+    VALUES (
+      ?, ?, ?, ?, ?,
+      DATE_ADD(NOW(), INTERVAL 2 HOUR),
+      1
+    )
+    `,
+    [
+      table.id,
+      table.branchId,
+      table.companyId,
+      sessionToken,
+      ipAddress,
+    ]
+  );
+
+  sessionId = insertResult.insertId;
+
+} else {
+
+  sessionId = session.id;
+  sessionToken = session.sessionToken;
+  reused = true;
+}
 
     /* ================================================
        🔎 CHECK EXISTING DEVICE

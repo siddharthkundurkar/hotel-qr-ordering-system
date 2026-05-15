@@ -96,14 +96,14 @@ export default function CustomerLayout() {
           "
           >
             <PremiumNavItem
-              to={token ? `/scan/${token}/menu` : "#"}
+              to={token ? `/qr/${token}/menu` : "#"}
               icon={Utensils}
               label="Menu"
               disabled={!sessionToken}
             />
 
             <PremiumNavItem
-              to={token ? `/scan/${token}/live-order` : "#"}
+              to={token ? `/qr/${token}/live-order` : "#"}
               icon={ClipboardList}
               label="My Order"
               disabled={!sessionToken}
