@@ -315,7 +315,7 @@ export const logout = async (req, res, next) => {
     next(err);
   }
 };
-eexport const refreshAccessToken = async (req, res, next) => {
+export const refreshAccessToken = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
 
