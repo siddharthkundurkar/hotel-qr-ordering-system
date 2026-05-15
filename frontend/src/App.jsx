@@ -60,9 +60,9 @@ import OwnerReports from "./pages/owner/report/OwnerReport";
 import ServedOrders from "./pages/waiter/ServedOrders";
 import eruda from "eruda";
 
-
+eruda.init();
 export default function App() {
-   eruda.init();
+   
   return (
     <Routes>
       {/* ================= PUBLIC ================= */}
