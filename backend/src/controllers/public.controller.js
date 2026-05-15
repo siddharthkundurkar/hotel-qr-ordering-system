@@ -210,9 +210,10 @@ export const openTableByQr = async (req, res) => {
     await conn.rollback();
     console.error("🔴 QR OPEN ERROR:", err);
 
-    return res.status(500).json({
-      message: "Failed to open table",
-    });
+   return res.status(500).json({
+  message: err.message,
+  stack: err.stack,
+});
   } finally {
     conn.release();
   }
