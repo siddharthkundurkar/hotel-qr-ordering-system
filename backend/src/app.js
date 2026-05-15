@@ -121,7 +121,12 @@ app.use((req, res, next) => {
 /* ================= STATIC FILES ================= */
 
 // uploads folder
+/* ================= STATIC FILES ================= */
 
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "uploads"))
+);
 /* ================= ERROR HANDLER ================= */
 app.use(errorHandler);
 

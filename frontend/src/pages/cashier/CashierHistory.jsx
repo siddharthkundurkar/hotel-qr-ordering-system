@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getPaidOrders } from "../../api/cashier.services";
 
 const API_BASE =
-  import.meta.env.VITE_API_URL || "http://localhost:5000";
+  import.meta.env.VITE_API_URL || "https://hotel-qr-ordering-system.onrender.com";
 
 export default function CashierHistory() {
   const [orders, setOrders] = useState([]);
