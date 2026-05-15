@@ -58,7 +58,11 @@ import MyOrders from "./pages/waiter/MyOrders";
 import SelectBranchPage from "./pages/manager/SelectBranchPage";
 import OwnerReports from "./pages/owner/report/OwnerReport";
 import ServedOrders from "./pages/waiter/ServedOrders";
+import eruda from "eruda";
+
+
 export default function App() {
+   eruda.init();
   return (
     <Routes>
       {/* ================= PUBLIC ================= */}
@@ -204,5 +208,6 @@ export default function App() {
         <Route path="history" element={<CashierHistory />} />
       </Route>
     </Routes>
+   
   );
 }
