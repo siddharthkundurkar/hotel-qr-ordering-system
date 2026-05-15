@@ -30,7 +30,7 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import platformRoutes from "./routes/platform.routes.js";
 import ownerReportRoutes from "./routes/ownerReport.routes.js";
 const app = express();
-
+app.set("trust proxy", 1);
 /* ================= PATH FIX (ESM) ================= */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

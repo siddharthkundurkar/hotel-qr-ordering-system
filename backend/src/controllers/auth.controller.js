@@ -34,7 +34,7 @@ export const login = async (req, res, next) => {
     }
 
     /* =================================================
-       🔎 Get latest active user (✅ include branch_id)
+       🔎 Get latest active user
     ================================================= */
     const [[user]] = await db.query(
       `SELECT 
@@ -54,27 +54,39 @@ export const login = async (req, res, next) => {
 
     if (!user) {
       await safeAudit(req, "LOGIN_FAILED", { email });
-      return res.status(401).json({ message: "Invalid credentials" });
+
+      return res.status(401).json({
+        message: "Invalid credentials",
+      });
     }
 
     /* =================================================
        🔐 Password check
     ================================================= */
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
 
     if (!isMatch) {
       await safeAudit(req, "LOGIN_FAILED", { email });
-      return res.status(401).json({ message: "Invalid credentials" });
+
+      return res.status(401).json({
+        message: "Invalid credentials",
+      });
     }
 
     console.log("🔥 LOGIN USER FROM DB:", user);
 
     /* =================================================
-       🏢 Company safety check (skip SUPER_ADMIN)
+       🏢 Company safety check
     ================================================= */
     if (user.role !== "SUPER_ADMIN") {
       const [[company]] = await db.query(
-        `SELECT id, is_active FROM companies WHERE id = ? LIMIT 1`,
+        `SELECT id, is_active
+         FROM companies
+         WHERE id = ?
+         LIMIT 1`,
         [user.company_id]
       );
 
@@ -86,23 +98,28 @@ export const login = async (req, res, next) => {
     }
 
     /* =================================================
-       🎯 ENTERPRISE BRANCH RESOLUTION
+       🎯 Branch resolution
     ================================================= */
-    const STAFF_FIXED_BRANCH = ["KITCHEN", "WAITER", "CASHIER"];
+    const STAFF_FIXED_BRANCH = [
+      "KITCHEN",
+      "WAITER",
+      "CASHIER",
+    ];
 
     let branchId = null;
 
-    // ✅ staff → fixed branch from DB
+    // ✅ Staff → fixed branch
     if (STAFF_FIXED_BRANCH.includes(user.role)) {
       if (!user.branch_id) {
         return res.status(403).json({
           message: "Staff is not assigned to any branch",
         });
       }
+
       branchId = Number(user.branch_id);
     }
 
-    // ✅ manager → selects later (keep null)
+    // ✅ Manager → selects later
     if (user.role === "MANAGER") {
       branchId = null;
     }
@@ -118,39 +135,49 @@ export const login = async (req, res, next) => {
     });
 
     /* =================================================
-       🔁 Refresh token rotation
+       🔁 Refresh token
     ================================================= */
     const refreshToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    await db.query(`DELETE FROM refresh_tokens WHERE userId = ?`, [
-      user.id,
-    ]);
+    const expiresAt = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    );
 
+    // Remove old tokens
     await db.query(
-      `INSERT INTO refresh_tokens (userId, token, expiresAt, branch_id)
+      `DELETE FROM refresh_tokens WHERE userId = ?`,
+      [user.id]
+    );
+
+    // Insert new token
+    await db.query(
+      `INSERT INTO refresh_tokens
+       (userId, token, expiresAt, branch_id)
        VALUES (?, ?, ?, ?)`,
       [user.id, refreshToken, expiresAt, branchId]
     );
 
     /* =================================================
-       🧾 Safe audit
+       🧾 Audit
     ================================================= */
     await safeAudit(req, "LOGIN_SUCCESS", {
       userId: user.id,
     });
 
     /* =================================================
-       🍪 Cookie
+       🍪 Production-safe cookie
     ================================================= */
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    /* =================================================
+       ✅ Response
+    ================================================= */
     return res.json({
       accessToken,
       user: {
@@ -160,6 +187,7 @@ export const login = async (req, res, next) => {
         branchId,
       },
     });
+
   } catch (err) {
     next(err);
   }
@@ -174,54 +202,72 @@ export const selectBranch = async (req, res, next) => {
     const user = req.user;
 
     if (!branchId) {
-      return res.status(400).json({ message: "branchId is required" });
+      return res.status(400).json({
+        message: "branchId is required",
+      });
     }
 
     if (user.role !== "MANAGER") {
-
-      return res.status(403).json({ message: "Only managers can select branch" });
+      return res.status(403).json({
+        message: "Only managers can select branch",
+      });
     }
 
-const [rows] = await db.query(
-  `SELECT id FROM branches WHERE id = ? AND company_id = ?`,
-  [branchId, user.companyId]
-);
-
+    const [rows] = await db.query(
+      `SELECT id FROM branches WHERE id = ? AND company_id = ?`,
+      [branchId, user.companyId]
+    );
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: "Invalid branch" });
+      return res.status(404).json({
+        message: "Invalid branch",
+      });
     }
 
-    // 🔄 Rotate refresh token
+    // 🔄 Remove old refresh token
     const oldRefresh = req.cookies.refreshToken;
+
     if (oldRefresh) {
-      await db.query(`DELETE FROM refresh_tokens WHERE token = ?`, [oldRefresh]);
+      await db.query(
+        `DELETE FROM refresh_tokens WHERE token = ?`,
+        [oldRefresh]
+      );
     }
 
+    // 🆕 Generate new refresh token
     const newRefreshToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-   await db.query(
-  `INSERT INTO refresh_tokens (userId, token, expiresAt, branch_id)
-   VALUES (?, ?, ?, ?)`,
-  [user.id, newRefreshToken, expiresAt, branchId]
-);
+    const expiresAt = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    );
 
+    await db.query(
+      `INSERT INTO refresh_tokens
+       (userId, token, expiresAt, branch_id)
+       VALUES (?, ?, ?, ?)`,
+      [user.id, newRefreshToken, expiresAt, branchId]
+    );
+
+    // 🎟️ Generate access token
     const accessToken = generateAccessToken({
       id: user.id,
       role: user.role,
       companyId: user.companyId,
-      branchId
+      branchId,
     });
 
+    // 🍪 Production-safe cookie
     res
       .cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
-        sameSite: "lax",
-        secure: false,
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ accessToken });
+      .json({
+        accessToken,
+      });
 
   } catch (err) {
     next(err);
@@ -245,6 +291,7 @@ export const logout = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
 
+    // 🗑️ Remove token from DB
     if (refreshToken) {
       await db.query(
         `DELETE FROM refresh_tokens WHERE token = ?`,
@@ -252,30 +299,35 @@ export const logout = async (req, res, next) => {
       );
     }
 
+    // 🍪 Clear cookie properly for cross-origin HTTPS
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
-      path: "/",   // 🔥 REQUIRED
+      secure: true,
+      sameSite: "none",
+      path: "/",
     });
 
-    res.json({ message: "Logged out successfully" });
+    return res.json({
+      message: "Logged out successfully",
+    });
 
   } catch (err) {
     next(err);
   }
 };
-
-export const refreshAccessToken = async (req, res, next) => {
+eexport const refreshAccessToken = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
 
+    // ❌ No cookie found
     if (!refreshToken) {
-      return res.status(401).json({ message: "No refresh token" });
+      return res.status(401).json({
+        message: "No refresh token",
+      });
     }
 
     /* ============================================
-       🔍 Find existing token
+       🔍 Find token in DB
     ============================================ */
     const [[row]] = await db.query(
       `SELECT
@@ -290,50 +342,65 @@ export const refreshAccessToken = async (req, res, next) => {
       [refreshToken]
     );
 
+    // ❌ Invalid token
     if (!row) {
-      return res.status(401).json({ message: "Invalid refresh token" });
+      return res.status(401).json({
+        message: "Invalid refresh token",
+      });
     }
 
     /* ============================================
-       🔄 HARD ROTATION (DELETE + INSERT) ✅ BEST PRACTICE
+       🔄 Rotate refresh token
     ============================================ */
     const newRefreshToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
+    const expiresAt = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000
+    );
+
+    // Remove old token
     await db.query(
       `DELETE FROM refresh_tokens WHERE token = ?`,
       [refreshToken]
     );
 
+    // Insert new token
     await db.query(
-      `INSERT INTO refresh_tokens (userId, token, expiresAt, branch_id)
+      `INSERT INTO refresh_tokens
+       (userId, token, expiresAt, branch_id)
        VALUES (?, ?, ?, ?)`,
-      [row.userId, newRefreshToken, expiresAt, row.branch_id]
+      [
+        row.userId,
+        newRefreshToken,
+        expiresAt,
+        row.branch_id,
+      ]
     );
 
     /* ============================================
-       🎟️ NEW ACCESS TOKEN
+       🎟️ Generate access token
     ============================================ */
     const accessToken = generateAccessToken({
       id: row.userId,
       role: row.role,
       companyId: row.company_id,
-      branchId: row.branch_id || null, // ⭐ important
+      branchId: row.branch_id || null,
     });
 
     /* ============================================
-       🍪 SET COOKIE
+       🍪 Set refresh cookie
     ============================================ */
-  const isProd = true; // since deployed
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-res.cookie("refreshToken", newRefreshToken, {
-  httpOnly: true,
-  secure: true,          // MUST for HTTPS
-  sameSite: "none",      // MUST for cross-origin
-  path: "/",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
-    return res.json({ accessToken });
+    return res.json({
+      accessToken,
+    });
 
   } catch (err) {
     next(err);

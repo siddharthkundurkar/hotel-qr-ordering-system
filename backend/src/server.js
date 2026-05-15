@@ -1,4 +1,4 @@
-import http from "node:http";   // better for Node ESM
+import http from "node:http";
 import { Server } from "socket.io";
 import app from "./app.js";
 import { runSlaJob } from "./jobs/slaJob.js";
@@ -12,7 +12,11 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "https://hotel-qr-ordering-system.vercel.app",
+    ],
     credentials: true,
   },
 
@@ -34,7 +38,7 @@ app.set("io", io);
 io.on("connection", (socket) => {
   console.log("🟢 Socket connected:", socket.id);
 
-  /* JOIN BRANCH (staff dashboards) */
+  /* JOIN BRANCH */
   socket.on("join:branch", (branchId) => {
     if (!branchId) return;
 
@@ -42,23 +46,30 @@ io.on("connection", (socket) => {
 
     if (!socket.rooms.has(room)) {
       socket.join(room);
+
       console.log(`🏢 ${socket.id} joined ${room}`);
     }
   });
 
-  /* JOIN ORDER (customer tracking) */
+  /* JOIN ORDER */
   socket.on("join:order", (payload) => {
     if (!payload) return;
 
     const orderId =
-      typeof payload === "object" ? payload.orderId : payload;
+      typeof payload === "object"
+        ? payload.orderId
+        : payload;
 
     if (!orderId) return;
 
-    const cleanId = String(orderId).replace("order:", "");
+    const cleanId = String(orderId).replace(
+      "order:",
+      ""
+    );
+
     const room = `order:${cleanId}`;
 
-    /* leave previous order rooms */
+    /* leave old order rooms */
     socket.rooms.forEach((r) => {
       if (r.startsWith("order:") && r !== room) {
         socket.leave(r);
@@ -66,16 +77,21 @@ io.on("connection", (socket) => {
     });
 
     socket.join(room);
+
     console.log(`📦 ${socket.id} joined ${room}`);
   });
 
   /* DEBUG */
   socket.on("ping:test", () => {
-    socket.emit("pong:test", { ok: true });
+    socket.emit("pong:test", {
+      ok: true,
+    });
   });
 
   socket.on("disconnect", (reason) => {
-    console.log(`🔴 Socket disconnected: ${socket.id} | ${reason}`);
+    console.log(
+      `🔴 Socket disconnected: ${socket.id} | ${reason}`
+    );
   });
 });
 
@@ -96,7 +112,9 @@ server.listen(PORT, () => {
       runTableGuard(io);
     }, 3 * 60 * 1000);
 
-    console.log("🛡️ Table Guard started (every 3 minutes)");
+    console.log(
+      "🛡️ Table Guard started (every 3 minutes)"
+    );
   }
 
   /* SLA JOB */
@@ -107,6 +125,8 @@ server.listen(PORT, () => {
       runSlaJob(io);
     }, 2 * 60 * 1000);
 
-    console.log("⏱️ SLA job started (every 2 minutes)");
+    console.log(
+      "⏱️ SLA job started (every 2 minutes)"
+    );
   }
 });
