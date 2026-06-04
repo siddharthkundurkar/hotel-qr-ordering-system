@@ -23,19 +23,24 @@ const safeAudit = async (req, action, meta = {}) => {
 
 export const login = async (req, res, next) => {
   try {
-    console.log("🚀 USING UPDATED LOGIN CONTROLLER FILE");
+    console.log("=================================");
+    console.log("🚀 LOGIN REQUEST RECEIVED");
+    console.log("BODY:", req.body);
+    console.log("=================================");
 
     const { email, password } = req.body;
 
+    console.log("📧 EMAIL:", email);
+    console.log("🔑 PASSWORD LENGTH:", password?.length);
+
     if (!email || !password) {
+      console.log("❌ Missing email or password");
+
       return res.status(400).json({
         message: "Email and password required",
       });
     }
 
-    /* =================================================
-       🔎 Get latest active user
-    ================================================= */
     const [[user]] = await db.query(
       `SELECT 
           id,
@@ -51,10 +56,12 @@ export const login = async (req, res, next) => {
        LIMIT 1`,
       [email]
     );
-console.log("EMAIL:", email);
 
-console.log("USER FOUND:", user);
+    console.log("🔍 USER FOUND:", user);
+
     if (!user) {
+      console.log("❌ USER NOT FOUND");
+
       await safeAudit(req, "LOGIN_FAILED", { email });
 
       return res.status(401).json({
@@ -62,15 +69,21 @@ console.log("USER FOUND:", user);
       });
     }
 
-    /* =================================================
-       🔐 Password check
-    ================================================= */
+    console.log("👤 USER ID:", user.id);
+    console.log("👤 USER ROLE:", user.role);
+    console.log("👤 USER ACTIVE:", user.is_active);
+    console.log("👤 USER COMPANY:", user.company_id);
+
     const isMatch = await bcrypt.compare(
       password,
       user.password_hash
     );
 
+    console.log("🔐 PASSWORD MATCH:", isMatch);
+
     if (!isMatch) {
+      console.log("❌ PASSWORD DOES NOT MATCH");
+
       await safeAudit(req, "LOGIN_FAILED", { email });
 
       return res.status(401).json({
@@ -78,11 +91,8 @@ console.log("USER FOUND:", user);
       });
     }
 
-    console.log("🔥 LOGIN USER FROM DB:", user);
+    console.log("✅ PASSWORD VERIFIED");
 
-    /* =================================================
-       🏢 Company safety check
-    ================================================= */
     if (user.role !== "SUPER_ADMIN") {
       const [[company]] = await db.query(
         `SELECT id, is_active
@@ -92,27 +102,31 @@ console.log("USER FOUND:", user);
         [user.company_id]
       );
 
+      console.log("🏢 COMPANY:", company);
+
       if (!company || company.is_active !== 1) {
+        console.log("❌ COMPANY INACTIVE");
+
         return res.status(403).json({
           message: "Company is inactive",
         });
       }
     }
 
-    /* =================================================
-       🎯 Branch resolution
-    ================================================= */
+    let branchId = null;
+
     const STAFF_FIXED_BRANCH = [
       "KITCHEN",
       "WAITER",
       "CASHIER",
     ];
 
-    let branchId = null;
-
-    // ✅ Staff → fixed branch
     if (STAFF_FIXED_BRANCH.includes(user.role)) {
+      console.log("👨‍🍳 STAFF LOGIN");
+
       if (!user.branch_id) {
+        console.log("❌ STAFF HAS NO BRANCH");
+
         return res.status(403).json({
           message: "Staff is not assigned to any branch",
         });
@@ -121,14 +135,8 @@ console.log("USER FOUND:", user);
       branchId = Number(user.branch_id);
     }
 
-    // ✅ Manager → selects later
-    if (user.role === "MANAGER") {
-      branchId = null;
-    }
+    console.log("🌿 BRANCH ID:", branchId);
 
-    /* =================================================
-       🎟️ Generate access token
-    ================================================= */
     const accessToken = generateAccessToken({
       id: user.id,
       role: user.role,
@@ -136,39 +144,38 @@ console.log("USER FOUND:", user);
       branchId,
     });
 
-    /* =================================================
-       🔁 Refresh token
-    ================================================= */
+    console.log("🎟️ ACCESS TOKEN GENERATED");
+
     const refreshToken = crypto.randomUUID();
+
+    console.log("🔄 REFRESH TOKEN:", refreshToken);
 
     const expiresAt = new Date(
       Date.now() + 7 * 24 * 60 * 60 * 1000
     );
 
-    // Remove old tokens
     await db.query(
       `DELETE FROM refresh_tokens WHERE userId = ?`,
       [user.id]
     );
 
-    // Insert new token
-    await db.query(
+    console.log("🗑️ OLD TOKENS DELETED");
+
+    const [insertResult] = await db.query(
       `INSERT INTO refresh_tokens
        (userId, token, expiresAt, branch_id)
        VALUES (?, ?, ?, ?)`,
       [user.id, refreshToken, expiresAt, branchId]
     );
 
-    /* =================================================
-       🧾 Audit
-    ================================================= */
+    console.log("✅ REFRESH TOKEN SAVED:", insertResult);
+
     await safeAudit(req, "LOGIN_SUCCESS", {
       userId: user.id,
     });
 
-    /* =================================================
-       🍪 Production-safe cookie
-    ================================================= */
+    console.log("📝 AUDIT LOG SUCCESS");
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
@@ -177,9 +184,11 @@ console.log("USER FOUND:", user);
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    /* =================================================
-       ✅ Response
-    ================================================= */
+    console.log("🍪 COOKIE SET");
+
+    console.log("✅ LOGIN SUCCESS");
+    console.log("=================================");
+
     return res.json({
       accessToken,
       user: {
@@ -191,10 +200,13 @@ console.log("USER FOUND:", user);
     });
 
   } catch (err) {
+    console.error("💥 LOGIN ERROR:", err);
+    console.error("💥 MESSAGE:", err.message);
+    console.error("💥 STACK:", err.stack);
+
     next(err);
   }
 };
-
 
 
 
