@@ -51,7 +51,9 @@ export const login = async (req, res, next) => {
        LIMIT 1`,
       [email]
     );
+console.log("EMAIL:", email);
 
+console.log("USER FOUND:", user);
     if (!user) {
       await safeAudit(req, "LOGIN_FAILED", { email });
 
