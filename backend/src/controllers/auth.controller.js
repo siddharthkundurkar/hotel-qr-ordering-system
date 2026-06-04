@@ -209,7 +209,6 @@ export const login = async (req, res, next) => {
 };
 
 
-
 export const selectBranch = async (req, res, next) => {
   try {
     const { branchId } = req.body;
